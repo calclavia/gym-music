@@ -6,11 +6,17 @@ class MusicEnv(gym.Env):
     """
     metadata = {'render.modes': ['human']}
 
-    def __init__(self):
-        pass
+    def __init__(self, num_notes):
+        self.observation_space = spaces.Discrete(num_notes)
+        self.action_space = spaces.Discrete(num_notes)
 
     def _step(self, action):
-        pass
+        """
+        Parameters:
+            - action: An integer that represents the note chosen
+        """
+        self.composition.append(action)
+        return action
 
     def _reset(self):
         # Composition is a list of notes composed

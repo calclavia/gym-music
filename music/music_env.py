@@ -12,11 +12,11 @@ class MusicEnv(gym.Env):
 
     def _step(self, action):
         """
-        Parameters:
-            - action: An integer that represents the note chosen
+        Args:
+            action: An integer that represents the note chosen
         """
         self.composition.append(action)
-        return action
+        return action, 0, False, {}
 
     def _reset(self):
         # Composition is a list of notes composed

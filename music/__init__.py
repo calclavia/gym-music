@@ -1,7 +1,7 @@
 from gym.envs.registration import register
-from .music_env import MusicEnv
+from .music_theory_env import MusicTheoryEnv
 
 register(
-    id='music-v0',
-    entry_point='music:MusicEnv'
+    id='music-theory-v0',
+    entry_point='music:MusicTheoryEnv'
 )

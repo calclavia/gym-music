@@ -47,6 +47,7 @@ class MusicTheoryEnv(MusicEnv):
         """
         if not self.detect_repeating_notes(action_note):
             return 0.1
+        return 0
 
     def detect_repeating_notes(self, action_note):
         """

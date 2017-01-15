@@ -224,3 +224,134 @@ class MusicTheoryEnv(MusicEnv):
             else:
                 return True, motif
         return False, None
+
+    def detect_sequential_interval(self, action, key=None):
+        """
+        Finds the melodic interval between the action and the last note played.
+        Uses constants to represent special intervals like rests.
+        Args:
+          action: One-hot encoding of the chosen action
+          key: The numeric values of notes belonging to this key. Defaults to
+            C-major if not provided.
+        Returns:
+          An integer value representing the interval, or a constant value for
+          special intervals.
+        """
+        prev_note = self.composition[-2]
+
+        c_major = False
+        if key is None:
+          key = C_MAJOR_KEY
+          c_notes = [2, 14, 26]
+          g_notes = [9, 21, 33]
+          e_notes = [6, 18, 30]
+          c_major = True
+          tonic_notes = [2, 14, 26]
+          fifth_notes = [9, 21, 33]
+
+        # get rid of non-notes in prev_note
+        prev_note_index = len(self.composition) - 2
+        while (prev_note == NO_EVENT or
+               prev_note == NOTE_OFF) and prev_note_index >= 0:
+          prev_note = self.composition[prev_note_index]
+          prev_note_index -= 1
+        if prev_note == NOTE_OFF or prev_note == NO_EVENT:
+          tf.logging.debug('Action_note: %s, prev_note: %s', action, prev_note)
+          return 0, action, prev_note
+
+        tf.logging.debug('Action_note: %s, prev_note: %s', action, prev_note)
+
+        # get rid of non-notes in action
+        if action == NO_EVENT:
+          if prev_note in tonic_notes or prev_note in fifth_notes:
+            return (rl_tuner_ops.HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH,
+                    action, prev_note)
+          else:
+            return rl_tuner_ops.HOLD_INTERVAL, action, prev_note
+        elif action == NOTE_OFF:
+          if prev_note in tonic_notes or prev_note in fifth_notes:
+            return (rl_tuner_ops.REST_INTERVAL_AFTER_THIRD_OR_FIFTH,
+                    action, prev_note)
+          else:
+            return rl_tuner_ops.REST_INTERVAL, action, prev_note
+
+        interval = abs(action - prev_note)
+
+        if c_major and interval == rl_tuner_ops.FIFTH and (
+            prev_note in c_notes or prev_note in g_notes):
+          return rl_tuner_ops.IN_KEY_FIFTH, action, prev_note
+        if c_major and interval == rl_tuner_ops.THIRD and (
+            prev_note in c_notes or prev_note in e_notes):
+          return rl_tuner_ops.IN_KEY_THIRD, action, prev_note
+
+        return interval, action, prev_note
+
+    def reward_preferred_intervals(self, action, scaler=5.0, key=None):
+        """
+        Dispenses reward based on the melodic interval just played.
+        Args:
+          action: One-hot encoding of the chosen action.
+          scaler: This value will be multiplied by all rewards in this function.
+          key: The numeric values of notes belonging to this key. Defaults to
+            C-major if not provided.
+        Returns:
+          Float reward value.
+        """
+        interval, _, _ = self.detect_sequential_interval(action, key)
+        tf.logging.debug('Interval:', interval)
+
+        if interval == 0:  # either no interval or involving uninteresting rests
+          tf.logging.debug('No interval or uninteresting.')
+          return 0.0
+
+        reward = 0.0
+
+        # rests can be good
+        if interval == rl_tuner_ops.REST_INTERVAL:
+          reward = 0.05
+          tf.logging.debug('Rest interval.')
+        if interval == rl_tuner_ops.HOLD_INTERVAL:
+          reward = 0.075
+        if interval == rl_tuner_ops.REST_INTERVAL_AFTER_THIRD_OR_FIFTH:
+          reward = 0.15
+          tf.logging.debug('Rest interval after 1st or 5th.')
+        if interval == rl_tuner_ops.HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH:
+          reward = 0.3
+
+        # large leaps and awkward intervals bad
+        if interval == rl_tuner_ops.SEVENTH:
+          reward = -0.3
+          tf.logging.debug('7th')
+        if interval > rl_tuner_ops.OCTAVE:
+          reward = -1.0
+          tf.logging.debug('More than octave.')
+
+        # common major intervals are good
+        if interval == rl_tuner_ops.IN_KEY_FIFTH:
+          reward = 0.1
+          tf.logging.debug('In key 5th')
+        if interval == rl_tuner_ops.IN_KEY_THIRD:
+          reward = 0.15
+          tf.logging.debug('In key 3rd')
+
+        # smaller steps are generally preferred
+        if interval == rl_tuner_ops.THIRD:
+          reward = 0.09
+          tf.logging.debug('3rd')
+        if interval == rl_tuner_ops.SECOND:
+          reward = 0.08
+          tf.logging.debug('2nd')
+        if interval == rl_tuner_ops.FOURTH:
+          reward = 0.07
+          tf.logging.debug('4th')
+
+        # larger leaps not as good, especially if not in key
+        if interval == rl_tuner_ops.SIXTH:
+          reward = 0.05
+          tf.logging.debug('6th')
+        if interval == rl_tuner_ops.FIFTH:
+          reward = 0.02
+          tf.logging.debug('5th')
+
+        tf.logging.debug('Interval reward', reward * scaler)
+        return reward * scaler

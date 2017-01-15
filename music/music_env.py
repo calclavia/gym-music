@@ -11,7 +11,8 @@ class MusicEnv(Env):
     def __init__(self):
         self.observation_space = spaces.Discrete(NUM_CLASSES)
         self.action_space = spaces.Discrete(NUM_CLASSES)
-        self.composition_length = 64
+        # Total number of notes
+        self.num_notes = 64
 
     def _step(self, action):
         """
@@ -20,7 +21,7 @@ class MusicEnv(Env):
         """
         self.composition.append(action)
         self.beat += 1
-        return action, 0, self.beat == self.composition_length, {}
+        return action, 0, self.beat == self.num_notes, {}
 
     def _reset(self):
         # Composition is a list of notes composed

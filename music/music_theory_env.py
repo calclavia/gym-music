@@ -14,6 +14,7 @@ class MusicTheoryEnv(MusicEnv):
         state, reward, done, info = super()._step(action)
 
         # Compute total rewards
+        reward += self.reward_tonic(action)
         reward += self.reward_key(action)
         reward += self.reward_non_repeating(action)
 
@@ -26,11 +27,11 @@ class MusicTheoryEnv(MusicEnv):
         """
         return state, reward, done, info
 
-    def reward_key(self, action_note, penalty_amount=-1, key=C_MAJOR_KEY):
+    def reward_key(self, action, penalty_amount=-1, key=C_MAJOR_KEY):
         """
         Applies a penalty for playing notes not in a specific key.
         Args:
-          action_note: Integer of chosen note
+          action: Integer of chosen note
           penalty_amount: The amount the model will be penalized if it plays
             a note outside the key.
           key: The numeric values of notes belonging to this key. Defaults to
@@ -38,28 +39,28 @@ class MusicTheoryEnv(MusicEnv):
         Returns:
           Float reward value.
         """
-        return penalty_amount if action_note not in key else 0
+        return penalty_amount if action not in key else 0
 
-    def reward_non_repeating(self, action_note):
+    def reward_non_repeating(self, action):
         """
         Rewards the model for not playing the same note over and over.
         Penalizes the model for playing the same note repeatedly, although more
         repeititions are allowed if it occasionally holds the note or rests in
         between. Reward is uniform when there is no penalty.
         Args:
-            action_note: Integer of chosen note
+            action: Integer of chosen note
         Returns:
             Float reward value.
         """
-        if not self.detect_repeating_notes(action_note):
+        if not self.detect_repeating_notes(action):
             return 0.1
         return 0
 
-    def detect_repeating_notes(self, action_note):
+    def detect_repeating_notes(self, action):
         """
         Detects whether the note played is repeating previous notes excessively.
         Args:
-          action_note: An integer representing the note just played.
+          action: An integer representing the note just played.
         Returns:
           True if the note just played is excessively repeated, False otherwise.
         """
@@ -67,32 +68,33 @@ class MusicTheoryEnv(MusicEnv):
         contains_held_notes = False
         contains_breaks = False
 
-        # Note that the current action yas not yet been added to the composition
+        # Note that the current action yas not yet been added to the
+        # composition
         for i in range(len(self.composition) - 1, -1, -1):
-          if self.composition[i] == action_note:
-            num_repeated += 1
-          elif self.composition[i] == NOTE_OFF:
-            contains_breaks = True
-          elif self.composition[i] == NO_EVENT:
-            contains_held_notes = True
-          else:
-            break
+            if self.composition[i] == action:
+                num_repeated += 1
+            elif self.composition[i] == NOTE_OFF:
+                contains_breaks = True
+            elif self.composition[i] == NO_EVENT:
+                contains_held_notes = True
+            else:
+                break
 
-        if action_note == NOTE_OFF and num_repeated > 1:
-          return True
+        if action == NOTE_OFF and num_repeated > 1:
+            return True
         elif not contains_held_notes and not contains_breaks:
-          if num_repeated > 4:
-            return True
+            if num_repeated > 4:
+                return True
         elif contains_held_notes or contains_breaks:
-          if num_repeated > 6:
-            return True
+            if num_repeated > 6:
+                return True
         else:
-          if num_repeated > 8:
-            return True
+            if num_repeated > 8:
+                return True
 
         return False
 
-    def reward_tonic(self, action_note, tonic_note=C_MAJOR_TONIC, reward_amount=3):
+    def reward_tonic(self, action, tonic_note=C_MAJOR_TONIC, reward_amount=3):
         """
         Rewards for playing the tonic note at the right times.
         Rewards for playing the tonic as the first note of the first bar, and the
@@ -105,16 +107,15 @@ class MusicTheoryEnv(MusicEnv):
         Returns:
           Float reward value.
         """
-        # TODO: Complete this
-        first_note_of_final_bar = self.num_notes_in_melody - 4
+        first_note_of_final_bar = self.num_notes - 4
 
         if self.beat == 0 or self.beat == first_note_of_final_bar:
-          if action_note == tonic_note:
-            return reward_amount
+            if action == tonic_note:
+                return reward_amount
         elif self.beat == first_note_of_final_bar + 1:
-          if action_note == NO_EVENT:
-            return reward_amount
+            if action == NO_EVENT:
+                return reward_amount
         elif self.beat > first_note_of_final_bar + 1:
-          if action_note == NO_EVENT or action_note == NOTE_OFF:
-            return reward_amount
+            if action == NO_EVENT or action == NOTE_OFF:
+                return reward_amount
         return 0.0

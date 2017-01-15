@@ -12,7 +12,7 @@ class MusicEnv(Env):
         self.observation_space = spaces.Discrete(NUM_CLASSES)
         self.action_space = spaces.Discrete(NUM_CLASSES)
         # Total number of notes
-        self.num_notes = 64
+        self.num_notes = 32
 
     def _step(self, action):
         """
@@ -28,7 +28,7 @@ class MusicEnv(Env):
         self.composition = []
         self.beat = 0
         # Start with a random note (except end composition).
-        state = random.randint(0, NUM_CLASSES  -1)
+        state = random.randint(MIN_CLASS, NUM_CLASSES  -1)
         return state
 
     def _render(self, mode='human', close=False):

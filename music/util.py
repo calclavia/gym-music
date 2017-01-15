@@ -8,6 +8,11 @@ NO_EVENT = 1
 
 # Number of output note classes.
 NUM_CLASSES = 38
+MIN_CLASS = 2 # First note class
+
+MIN_NOTE = 48  # Inclusive
+MAX_NOTE = 84  # Exclusive
+BEATS_PER_BAR = 8
 
 # Music theory constants used in defining reward functions.
 # Note that action 2 = midi note 48.

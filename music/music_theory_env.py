@@ -2,6 +2,8 @@ import numpy as np
 from .music_env import MusicEnv
 from .util import *
 
+# TODO: Should make TF optional...
+import tensorflow as tf
 
 class MusicTheoryEnv(MusicEnv):
     """
@@ -19,6 +21,7 @@ class MusicTheoryEnv(MusicEnv):
         reward += self.reward_non_repeating(action)
         reward += self.reward_motif(action)
         reward += self.reward_repeated_motif(action)
+        reward += self.reward_preferred_intervals(action)
 
         # Finished
         """
@@ -264,25 +267,25 @@ class MusicTheoryEnv(MusicEnv):
         # get rid of non-notes in action
         if action == NO_EVENT:
           if prev_note in tonic_notes or prev_note in fifth_notes:
-            return (rl_tuner_ops.HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH,
+            return (HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH,
                     action, prev_note)
           else:
-            return rl_tuner_ops.HOLD_INTERVAL, action, prev_note
+            return HOLD_INTERVAL, action, prev_note
         elif action == NOTE_OFF:
           if prev_note in tonic_notes or prev_note in fifth_notes:
-            return (rl_tuner_ops.REST_INTERVAL_AFTER_THIRD_OR_FIFTH,
+            return (REST_INTERVAL_AFTER_THIRD_OR_FIFTH,
                     action, prev_note)
           else:
-            return rl_tuner_ops.REST_INTERVAL, action, prev_note
+            return REST_INTERVAL, action, prev_note
 
         interval = abs(action - prev_note)
 
-        if c_major and interval == rl_tuner_ops.FIFTH and (
+        if c_major and interval == FIFTH and (
             prev_note in c_notes or prev_note in g_notes):
-          return rl_tuner_ops.IN_KEY_FIFTH, action, prev_note
-        if c_major and interval == rl_tuner_ops.THIRD and (
+          return IN_KEY_FIFTH, action, prev_note
+        if c_major and interval == THIRD and (
             prev_note in c_notes or prev_note in e_notes):
-          return rl_tuner_ops.IN_KEY_THIRD, action, prev_note
+          return IN_KEY_THIRD, action, prev_note
 
         return interval, action, prev_note
 
@@ -307,49 +310,49 @@ class MusicTheoryEnv(MusicEnv):
         reward = 0.0
 
         # rests can be good
-        if interval == rl_tuner_ops.REST_INTERVAL:
+        if interval == REST_INTERVAL:
           reward = 0.05
           tf.logging.debug('Rest interval.')
-        if interval == rl_tuner_ops.HOLD_INTERVAL:
+        if interval == HOLD_INTERVAL:
           reward = 0.075
-        if interval == rl_tuner_ops.REST_INTERVAL_AFTER_THIRD_OR_FIFTH:
+        if interval == REST_INTERVAL_AFTER_THIRD_OR_FIFTH:
           reward = 0.15
           tf.logging.debug('Rest interval after 1st or 5th.')
-        if interval == rl_tuner_ops.HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH:
+        if interval == HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH:
           reward = 0.3
 
         # large leaps and awkward intervals bad
-        if interval == rl_tuner_ops.SEVENTH:
+        if interval == SEVENTH:
           reward = -0.3
           tf.logging.debug('7th')
-        if interval > rl_tuner_ops.OCTAVE:
+        if interval > OCTAVE:
           reward = -1.0
           tf.logging.debug('More than octave.')
 
         # common major intervals are good
-        if interval == rl_tuner_ops.IN_KEY_FIFTH:
+        if interval == IN_KEY_FIFTH:
           reward = 0.1
           tf.logging.debug('In key 5th')
-        if interval == rl_tuner_ops.IN_KEY_THIRD:
+        if interval == IN_KEY_THIRD:
           reward = 0.15
           tf.logging.debug('In key 3rd')
 
         # smaller steps are generally preferred
-        if interval == rl_tuner_ops.THIRD:
+        if interval == THIRD:
           reward = 0.09
           tf.logging.debug('3rd')
-        if interval == rl_tuner_ops.SECOND:
+        if interval == SECOND:
           reward = 0.08
           tf.logging.debug('2nd')
-        if interval == rl_tuner_ops.FOURTH:
+        if interval == FOURTH:
           reward = 0.07
           tf.logging.debug('4th')
 
         # larger leaps not as good, especially if not in key
-        if interval == rl_tuner_ops.SIXTH:
+        if interval == SIXTH:
           reward = 0.05
           tf.logging.debug('6th')
-        if interval == rl_tuner_ops.FIFTH:
+        if interval == FIFTH:
           reward = 0.02
           tf.logging.debug('5th')
 

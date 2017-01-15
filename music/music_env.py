@@ -24,11 +24,11 @@ class MusicEnv(Env):
         return action, 0, self.beat == self.num_notes, {}
 
     def _reset(self):
-        # Composition is a list of notes composed
-        self.composition = []
-        self.beat = 0
         # Start with a random note (except end composition).
         state = random.randint(MIN_CLASS, NUM_CLASSES  -1)
+        # Composition is a list of notes composed
+        self.composition = [state]
+        self.beat = 0
         return state
 
     def _render(self, mode='human', close=False):

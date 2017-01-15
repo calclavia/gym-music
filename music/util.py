@@ -22,3 +22,21 @@ C_MAJOR_KEY = [0, 1, 2, 4, 6, 7, 9, 11, 13, 14, 16, 18, 19, 21, 23, 25, 26, 28,
 
 C_MAJOR_TONIC = 14
 A_MINOR_TONIC = 23
+
+# The number of half-steps in musical intervals, in order of dissonance
+OCTAVE = 12
+FIFTH = 7
+THIRD = 4
+SIXTH = 9
+SECOND = 2
+FOURTH = 5
+SEVENTH = 11
+HALFSTEP = 1
+
+# Special intervals that have unique rewards
+REST_INTERVAL = -1
+HOLD_INTERVAL = -1.5
+REST_INTERVAL_AFTER_THIRD_OR_FIFTH = -2
+HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH = -2.5
+IN_KEY_THIRD = -3
+IN_KEY_FIFTH = -5

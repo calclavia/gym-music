@@ -16,11 +16,13 @@ class MusicEnv(gym.Env):
             action: An integer that represents the note chosen
         """
         self.composition.append(action)
+        self.beat += 1
         return action, 0, False, {}
 
     def _reset(self):
         # Composition is a list of notes composed
         self.composition = []
+        self.beat = 0
 
     def _render(self, mode='human', close=False):
         pass

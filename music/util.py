@@ -6,7 +6,7 @@ https://github.com/tensorflow/magenta/blob/master/magenta/models/rl_tuner/rl_tun
 NOTE_OFF = 0
 NO_EVENT = 1
 
-# Number of output note classes. This is a property of the dataset.
+# Number of output note classes.
 NUM_CLASSES = 38
 
 # Music theory constants used in defining reward functions.

@@ -11,14 +11,20 @@ class MusicTheoryEnv(MusicEnv):
     """
 
     def _step(self, action):
-        super()._step(action)
+        state, reward, done, info = super()._step(action)
 
         # Compute total rewards
-        reward = 0
         reward += self.reward_key(action)
         reward += self.reward_non_repeating(action)
 
-        return action, reward, False, {}
+        # Finished
+        """
+        done = action == END_COMPOSITION
+
+        if done:
+            reward += 1
+        """
+        return state, reward, done, info
 
     def reward_key(self, action_note, penalty_amount=-1, key=C_MAJOR_KEY):
         """

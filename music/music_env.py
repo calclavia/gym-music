@@ -1,14 +1,16 @@
-import gym
+import random
+from gym import Env, spaces
+from .util import *
 
-class MusicEnv(gym.Env):
+class MusicEnv(Env):
     """
     An abstract music environment for music composition.
     """
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, num_notes):
-        self.observation_space = spaces.Discrete(num_notes)
-        self.action_space = spaces.Discrete(num_notes)
+    def __init__(self):
+        self.observation_space = spaces.Discrete(NUM_CLASSES)
+        self.action_space = spaces.Discrete(NUM_CLASSES)
 
     def _step(self, action):
         """
@@ -23,6 +25,7 @@ class MusicEnv(gym.Env):
         # Composition is a list of notes composed
         self.composition = []
         self.beat = 0
+        return random.randint(0, NUM_CLASSES)
 
     def _render(self, mode='human', close=False):
         pass

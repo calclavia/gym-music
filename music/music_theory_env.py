@@ -11,12 +11,12 @@ class MusicTheoryEnv(MusicEnv):
     """
 
     def _step(self, action):
-        super.step(action)
+        super()._step(action)
 
         # Compute total rewards
         reward = 0
-        reward += reward_key(action)
-        reward += reward_non_repeating(action)
+        reward += self.reward_key(action)
+        reward += self.reward_non_repeating(action)
 
         return action, reward, False, {}
 
@@ -34,19 +34,19 @@ class MusicTheoryEnv(MusicEnv):
         """
         return penalty_amount if action_note not in key else 0
 
-     def reward_non_repeating(self, action_note):
+    def reward_non_repeating(self, action_note):
         """
         Rewards the model for not playing the same note over and over.
         Penalizes the model for playing the same note repeatedly, although more
         repeititions are allowed if it occasionally holds the note or rests in
         between. Reward is uniform when there is no penalty.
         Args:
-          action_note: Integer of chosen note
+            action_note: Integer of chosen note
         Returns:
-          Float reward value.
+            Float reward value.
         """
         if not self.detect_repeating_notes(action_note):
-          return 0.1
+            return 0.1
 
     def detect_repeating_notes(self, action_note):
         """

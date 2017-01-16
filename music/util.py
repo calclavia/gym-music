@@ -40,3 +40,11 @@ REST_INTERVAL_AFTER_THIRD_OR_FIFTH = -2
 HOLD_INTERVAL_AFTER_THIRD_OR_FIFTH = -2.5
 IN_KEY_THIRD = -3
 IN_KEY_FIFTH = -5
+
+# Indicate melody direction
+ASCENDING = 1
+DESCENDING = -1
+
+# Indicate whether a melodic leap has been resolved or if another leap was made
+LEAP_RESOLVED = 1
+LEAP_DOUBLED = -1

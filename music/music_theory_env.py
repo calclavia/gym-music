@@ -16,12 +16,14 @@ class MusicTheoryEnv(MusicEnv):
         state, reward, done, info = super()._step(action)
 
         # Compute total rewards
-        reward += self.reward_tonic(action)
         reward += self.reward_key(action)
-        reward += self.reward_non_repeating(action)
+        reward += self.reward_tonic(action)
+        reward += self.reward_penalize_repeating(action)
         reward += self.reward_motif(action)
         reward += self.reward_repeated_motif(action)
         reward += self.reward_preferred_intervals(action)
+        reward += self.reward_leap_up_back(action)
+        reward += self.reward_high_low_unique(action)
 
         # Finished
         """
@@ -46,20 +48,24 @@ class MusicTheoryEnv(MusicEnv):
         """
         return penalty_amount if action not in key else 0
 
-    def reward_non_repeating(self, action):
+
+    def reward_penalize_repeating(self, action, penalty_amount=-100.0):
         """
-        Rewards the model for not playing the same note over and over.
-        Penalizes the model for playing the same note repeatedly, although more
-        repeititions are allowed if it occasionally holds the note or rests in
-        between. Reward is uniform when there is no penalty.
+        Sets the previous reward to 0 if the same is played repeatedly.
+        Allows more repeated notes if there are held notes or rests in between. If
+        no penalty is applied will return the previous reward.
         Args:
-            action: Integer of chosen note
+          action: One-hot encoding of the chosen action.
+          penalty_amount: The amount the model will be penalized if it plays
+            repeating notes.
         Returns:
-            Float reward value.
+          Previous reward or 'penalty_amount'.
         """
-        if not self.detect_repeating_notes(action):
-            return 0.1
-        return 0
+        is_repeating = self.detect_repeating_notes(action)
+        if is_repeating:
+            return penalty_amount
+        else:
+            return 0.0
 
     def detect_repeating_notes(self, action):
         """
@@ -358,3 +364,168 @@ class MusicTheoryEnv(MusicEnv):
 
         tf.logging.debug('Interval reward', reward * scaler)
         return reward * scaler
+
+    def detect_leap_up_back(self, action, steps_between_leaps=6):
+        """
+        Detects when the composition takes a musical leap, and if it is resolved.
+        When the composition jumps up or down by an interval of a fifth or more,
+        it is a 'leap'. The model then remembers that is has a 'leap direction'. The
+        function detects if it then takes another leap in the same direction, if it
+        leaps back, or if it gradually resolves the leap.
+        Args:
+          action: One-hot encoding of the chosen action.
+          steps_between_leaps: Leaping back immediately does not constitute a
+            satisfactory resolution of a leap. Therefore the composition must wait
+            'steps_between_leaps' beats before leaping back.
+        Returns:
+          0 if there is no leap, 'LEAP_RESOLVED' if an existing leap has been
+          resolved, 'LEAP_DOUBLED' if 2 leaps in the same direction were made.
+        """
+        outcome = 0
+
+        interval, action_note, prev_note = self.detect_sequential_interval(action)
+
+        if action_note == NOTE_OFF or action_note == NO_EVENT:
+          self.steps_since_last_leap += 1
+          tf.logging.debug('Rest, adding to steps since last leap. It is'
+                           'now: %s', self.steps_since_last_leap)
+          return 0
+
+        # detect if leap
+        if interval >= FIFTH or interval == IN_KEY_FIFTH:
+          if action_note > prev_note:
+            leap_direction = ASCENDING
+            tf.logging.debug('Detected an ascending leap')
+          else:
+            leap_direction = DESCENDING
+            tf.logging.debug('Detected a descending leap')
+
+          # there was already an unresolved leap
+          if self.composition_direction != 0:
+            if self.composition_direction != leap_direction:
+              tf.logging.debug('Detected a resolved leap')
+              tf.logging.debug('Num steps since last leap: %s',
+                               self.steps_since_last_leap)
+              if self.steps_since_last_leap > steps_between_leaps:
+                outcome = LEAP_RESOLVED
+                tf.logging.debug('Sufficient steps before leap resolved, '
+                                 'awarding bonus')
+              self.composition_direction = 0
+              self.leapt_from = None
+            else:
+              tf.logging.debug('Detected a double leap')
+              outcome = LEAP_DOUBLED
+
+          # the composition had no previous leaps
+          else:
+            tf.logging.debug('There was no previous leap direction')
+            self.composition_direction = leap_direction
+            self.leapt_from = prev_note
+
+          self.steps_since_last_leap = 0
+        # there is no leap
+        else:
+          self.steps_since_last_leap += 1
+          tf.logging.debug('No leap, adding to steps since last leap. '
+                           'It is now: %s', self.steps_since_last_leap)
+
+          # If there was a leap before, check if composition has gradually returned
+          # This could be changed by requiring you to only go a 5th back in the
+          # opposite direction of the leap.
+          if (self.composition_direction == ASCENDING and
+              action_note <= self.leapt_from) or (
+                  self.composition_direction == DESCENDING and
+                  action_note >= self.leapt_from):
+            tf.logging.debug('detected a gradually resolved leap')
+            outcome = LEAP_RESOLVED
+            self.composition_direction = 0
+            self.leapt_from = None
+
+        return outcome
+
+    def reward_leap_up_back(self, action, resolving_leap_bonus=5.0,
+                          leaping_twice_punishment=-5.0):
+        """
+        Applies punishment and reward based on the principle leap up leap back.
+        Large interval jumps (more than a fifth) should be followed by moving back
+        in the same direction.
+        Args:
+          action: One-hot encoding of the chosen action.
+          resolving_leap_bonus: Amount of reward dispensed for resolving a previous
+            leap.
+          leaping_twice_punishment: Amount of reward received for leaping twice in
+            the same direction.
+        Returns:
+          Float reward value.
+        """
+
+        leap_outcome = self.detect_leap_up_back(action)
+        if leap_outcome == LEAP_RESOLVED:
+          tf.logging.debug('Leap resolved, awarding %s', resolving_leap_bonus)
+          return resolving_leap_bonus
+        elif leap_outcome == LEAP_DOUBLED:
+          tf.logging.debug('Leap doubled, awarding %s', leaping_twice_punishment)
+          return leaping_twice_punishment
+        else:
+          return 0.0
+
+    def detect_high_unique(self, composition):
+        """
+        Checks a composition to see if the highest note within it is repeated.
+        Args:
+          composition: A list of integers representing the notes in the piece.
+        Returns:
+          True if the lowest note was unique, False otherwise.
+        """
+        max_note = max(composition)
+        if list(composition).count(max_note) == 1:
+          return True
+        else:
+          return False
+
+    def detect_low_unique(self, composition):
+        """Checks a composition to see if the lowest note within it is repeated.
+        Args:
+          composition: A list of integers representing the notes in the piece.
+        Returns:
+          True if the lowest note was unique, False otherwise.
+        """
+        no_special_events = [x for x in composition
+                             if x != NO_EVENT and x != NOTE_OFF]
+        if no_special_events:
+          min_note = min(no_special_events)
+          if list(composition).count(min_note) == 1:
+            return True
+        return False
+
+    def reward_high_low_unique(self, action, reward_amount=3.0):
+        """
+        Evaluates if highest and lowest notes in composition occurred once.
+        Args:
+          action: One-hot encoding of the chosen action.
+          reward_amount: Amount of reward that will be given for the highest note
+            being unique, and again for the lowest note being unique.
+        Returns:
+          Float reward value.
+        """
+        if len(self.composition) != self.num_notes:
+          return 0.0
+
+        composition = np.array(self.composition)
+
+        reward = 0.0
+
+        if self.detect_high_unique(composition):
+          reward += reward_amount
+
+        if self.detect_low_unique(composition):
+          reward += reward_amount
+
+        return reward
+
+    def _reset(self):
+        # Keep track of leaps
+        self.composition_direction = 0
+        self.leapt_from = None  # stores the note at which composition leapt
+        self.steps_since_last_leap = 0
+        return super()._reset()

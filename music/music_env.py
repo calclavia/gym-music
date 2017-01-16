@@ -2,6 +2,7 @@ import random
 from gym import Env, spaces
 from .util import *
 
+
 class MusicEnv(Env):
     """
     An abstract music environment for music composition.
@@ -13,6 +14,7 @@ class MusicEnv(Env):
         self.action_space = spaces.Discrete(NUM_CLASSES)
         # Total number of notes
         self.num_notes = 32
+        self.key = C_MAJOR_KEY
 
     def _step(self, action):
         """
@@ -25,7 +27,7 @@ class MusicEnv(Env):
 
     def _reset(self):
         # Start with a random note (except end composition).
-        state = random.randint(MIN_CLASS, NUM_CLASSES  -1)
+        state = random.choice(self.key)
         # Composition is a list of notes composed
         self.composition = [state]
         self.beat = 0

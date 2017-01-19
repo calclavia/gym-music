@@ -1,3 +1,4 @@
+import numpy as np
 """
 Source:
 https://github.com/tensorflow/magenta/blob/master/magenta/models/rl_tuner/rl_tuner_ops.py
@@ -7,7 +8,7 @@ NOTE_OFF = 0
 NO_EVENT = 1
 
 # Number of output note classes.
-NUM_CLASSES = 38
+NUM_CLASSES = 128
 MIN_CLASS = 2 # First note class
 
 MIN_NOTE = 48  # Inclusive
@@ -49,3 +50,8 @@ DESCENDING = -1
 # Indicate whether a melodic leap has been resolved or if another leap was made
 LEAP_RESOLVED = 1
 LEAP_DOUBLED = -1
+
+def one_hot(i, nb_classes):
+    arr = np.zeros((nb_classes,), dtype=int)
+    arr[i] = 1
+    return arr

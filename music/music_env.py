@@ -11,7 +11,9 @@ class MusicEnv(Env):
 
     def __init__(self):
         self.observation_space = spaces.Discrete(NUM_CLASSES)
-        self.action_space = spaces.Discrete(NUM_CLASSES)
+        self.action_space = spaces.Tuple(
+            tuple(spaces.Discrete(2) for _ in range(NUM_CLASSES))
+        )
         # Total number of notes
         self.num_notes = 32
         self.key = C_MAJOR_KEY
@@ -27,7 +29,7 @@ class MusicEnv(Env):
 
     def _reset(self):
         # Start with a random note (except end composition).
-        state = random.choice(self.key)
+        state = one_hot(random.choice(self.key), len(self.action_space.spaces))
         # Composition is a list of notes composed
         self.composition = [state]
         self.beat = 0

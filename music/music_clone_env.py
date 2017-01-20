@@ -1,4 +1,5 @@
 import numpy as np
+import random
 from .music_env import MusicEnv
 
 label_compositions = []
@@ -22,7 +23,7 @@ class MusicCloneEnv(MusicEnv):
         # TODO: Avoid globals
         # A global list of compositions used as example for training
         global label_compositions
-        self.label_composition = np.random.choice(label_compositions)
+        self.label_composition = random.choice(label_compositions)
         self.num_notes = len(self.label_composition)
         self.reward_amount = 1. / self.num_notes
         return super()._reset()

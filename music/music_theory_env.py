@@ -152,7 +152,7 @@ class MusicTheoryEnv(MusicEnv):
         else:
             return 0.0
 
-    def detect_last_motif(self, composition, bar_length=BEATS_PER_BAR):
+    def detect_last_motif(self, composition, bar_length=NOTES_PER_BAR):
         """
         Detects if a motif was just played and if so, returns it.
         A motif should contain at least three distinct notes that are not note_on
@@ -179,7 +179,7 @@ class MusicTheoryEnv(MusicEnv):
 
     def reward_repeated_motif(self,
                               action,
-                              bar_length=BEATS_PER_BAR,
+                              bar_length=NOTES_PER_BAR,
                               reward_amount=4.0):
         """
         Adds a big bonus to previous reward if the model plays a repeated motif.

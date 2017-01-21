@@ -8,13 +8,13 @@ NOTE_OFF = 0
 NO_EVENT = 1
 
 # Number of output note classes.
-NUM_CLASSES = 128
 MIN_CLASS = 2 # First note class
+NUM_CLASSES = 128 + MIN_CLASS
 
-MIN_NOTE = 48  # Inclusive
-MAX_NOTE = 84  # Exclusive
-BEATS_PER_BAR = 8
-TICKS_PER_BEAT = 2
+# Number of beats in a bar
+BEATS_PER_BAR = 4
+# The quickest note is a half-note
+NOTES_PER_BAR = 2 * BEATS_PER_BAR
 
 # Music theory constants used in defining reward functions.
 # Note that action 2 = midi note 48.

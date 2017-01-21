@@ -16,7 +16,7 @@ class MusicTheoryEnv(MusicEnv):
         state, reward, done, info = super()._step(action)
 
         # Compute total rewards
-        reward += self.reward_key(action)
+        reward += self.reward_key(action) * 2
         reward += self.reward_tonic(action)
         reward += self.reward_penalize_repeating(action)
         reward += self.reward_motif(action)
@@ -25,16 +25,9 @@ class MusicTheoryEnv(MusicEnv):
         reward += self.reward_leap_up_back(action)
         reward += self.reward_high_low_unique(action)
 
-        # Finished
-        """
-        done = action == END_COMPOSITION
-
-        if done:
-            reward += 1
-        """
         return state, reward, done, info
 
-    def reward_key(self, action, penalty_amount=-1, key=C_MAJOR_KEY):
+    def reward_key(self, action, key=C_MAJOR_KEY):
         """
         Applies a penalty for playing notes not in a specific key.
         Args:
@@ -46,8 +39,7 @@ class MusicTheoryEnv(MusicEnv):
         Returns:
           Float reward value.
         """
-        return penalty_amount if action not in key else 0
-
+        return -1 if action not in key else 0
 
     def reward_penalize_repeating(self, action, penalty_amount=-100.0):
         """

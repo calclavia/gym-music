@@ -3,17 +3,26 @@ import numpy as np
 Source:
 https://github.com/tensorflow/magenta/blob/master/magenta/models/rl_tuner/rl_tuner_ops.py
 """
+# The number of half-steps in musical intervals, in order of dissonance
+OCTAVE = 12
+FIFTH = 7
+THIRD = 4
+SIXTH = 9
+SECOND = 2
+FOURTH = 5
+SEVENTH = 11
+HALFSTEP = 1
+
 # Note values of special actions.
 NOTE_OFF = 0
 NO_EVENT = 1
 
 # Number of octaves supported
 NUM_OCTAVES = 3
-NOTES_PER_OCTAVE = 12
 
 # Min note in MIDI supported
 MIN_NOTE = 36
-MAX_NOTE = MIN_NOTE + (NUM_OCTAVES + 1) * NOTES_PER_OCTAVE
+MAX_NOTE = MIN_NOTE + NUM_OCTAVES * OCTAVE
 
 # Number of output note classes.
 MIN_CLASS = 2  # First note class
@@ -30,21 +39,11 @@ NOTES_PER_BAR = 2 * BEATS_PER_BAR
 C_MAJOR_KEY = [0, 1]
 
 # Only add octaves we want
-for o in range(1, NUM_OCTAVES + 1):
-    C_MAJOR_KEY += [MIN_CLASS + o * i for i in [0, 2, 4, 5, 7, 9, 11]]
+for o in range(0, NUM_OCTAVES):
+    C_MAJOR_KEY += [MIN_CLASS + o * OCTAVE + i for i in [0, 2, 4, 5, 7, 9, 11]]
 
 C_MAJOR_TONIC = MIN_CLASS + 48
 A_MINOR_TONIC = MIN_CLASS + 57
-
-# The number of half-steps in musical intervals, in order of dissonance
-OCTAVE = 12
-FIFTH = 7
-THIRD = 4
-SIXTH = 9
-SECOND = 2
-FOURTH = 5
-SEVENTH = 11
-HALFSTEP = 1
 
 # Special intervals that have unique rewards
 REST_INTERVAL = -1

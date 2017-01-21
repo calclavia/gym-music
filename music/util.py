@@ -7,24 +7,31 @@ https://github.com/tensorflow/magenta/blob/master/magenta/models/rl_tuner/rl_tun
 NOTE_OFF = 0
 NO_EVENT = 1
 
+# Number of octaves supported
+NUM_OCTAVES = 4
+NOTES_PER_OCTAVE = 12
+
+# Min note in MIDI supported
+MIN_NOTE = 24
+MAX_NOTE = MIN_NOTE + (NUM_OCTAVES + 1) * NOTES_PER_OCTAVE
+
 # Number of output note classes.
 MIN_CLASS = 2  # First note class
-NUM_CLASSES = MIN_CLASS + 128
+NUM_CLASSES = MIN_CLASS + (MAX_NOTE - MIN_NOTE)
 
 # Number of beats in a bar
 BEATS_PER_BAR = 4
 # The quickest note is a half-note
 NOTES_PER_BAR = 2 * BEATS_PER_BAR
 
-# Number of octaves
-NUM_OCTAVES = 10
 
 # Music theory constants used in defining reward functions.
 # Actions that are in C major
 C_MAJOR_KEY = [0, 1]
 
-for o in range(NUM_OCTAVES):
-    C_MAJOR_KEY += [MIN_CLASS + i for i in [0, 2, 4, 5, 7, 9, 11]]
+# Only add octaves we want
+for o in range(1, NUM_OCTAVES + 1):
+    C_MAJOR_KEY += [MIN_CLASS + o * i for i in [0, 2, 4, 5, 7, 9, 11]]
 
 C_MAJOR_TONIC = MIN_CLASS + 48
 A_MINOR_TONIC = MIN_CLASS + 57

@@ -31,7 +31,7 @@ class MusicEnv(Env):
     def _reset(self):
         # Start with a random note (except end composition).
         #state = one_hot(random.choice(self.key), len(self.action_space.spaces))
-        state = random.randint(2, len(self.action_space.spaces) - 1)
+        state = random.choice(self.key)
         # Composition is a list of notes composed
         self.composition = [state]
         self.beat = 0

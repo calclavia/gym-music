@@ -30,8 +30,9 @@ NUM_CLASSES = MIN_CLASS + (MAX_NOTE - MIN_NOTE)
 
 # Number of beats in a bar
 BEATS_PER_BAR = 4
+NOTES_PER_BEAT = 2
 # The quickest note is a half-note
-NOTES_PER_BAR = 2 * BEATS_PER_BAR
+NOTES_PER_BAR = NOTES_PER_BEAT * BEATS_PER_BAR
 
 
 # Music theory constants used in defining reward functions.
@@ -42,8 +43,8 @@ C_MAJOR_KEY = [0, 1]
 for o in range(0, NUM_OCTAVES):
     C_MAJOR_KEY += [MIN_CLASS + o * OCTAVE + i for i in [0, 2, 4, 5, 7, 9, 11]]
 
-C_MAJOR_TONIC = MIN_CLASS + 48
-A_MINOR_TONIC = MIN_CLASS + 57
+C_MAJOR_TONIC = MIN_CLASS + MIN_NOTE + OCTAVE
+A_MINOR_TONIC = C_MAJOR_TONIC + SIXTH
 
 # Special intervals that have unique rewards
 REST_INTERVAL = -1

@@ -5,7 +5,7 @@ from .util import *
 
 class MusicEnv(Env):
     """
-    An abstract music environment for music composition.
+    An abstract music environment for music melody composition.
     """
     metadata = {'render.modes': ['human']}
 

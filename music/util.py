@@ -8,22 +8,26 @@ NOTE_OFF = 0
 NO_EVENT = 1
 
 # Number of output note classes.
-MIN_CLASS = 2 # First note class
-NUM_CLASSES = 128 + MIN_CLASS
+MIN_CLASS = 2  # First note class
+NUM_CLASSES = MIN_CLASS + 128
 
 # Number of beats in a bar
 BEATS_PER_BAR = 4
 # The quickest note is a half-note
 NOTES_PER_BAR = 2 * BEATS_PER_BAR
 
-# Music theory constants used in defining reward functions.
-# Note that action 2 = midi note 48.
-C_MAJOR_SCALE = [2, 4, 6, 7, 9, 11, 13, 14, 16, 18, 19, 21, 23, 25, 26]
-C_MAJOR_KEY = [0, 1, 2, 4, 6, 7, 9, 11, 13, 14, 16, 18, 19, 21, 23, 25, 26, 28,
-               30, 31, 33, 35, 37]
+# Number of octaves
+NUM_OCTAVES = 10
 
-C_MAJOR_TONIC = 14
-A_MINOR_TONIC = 23
+# Music theory constants used in defining reward functions.
+# Actions that are in C major
+C_MAJOR_KEY = [0, 1]
+
+for o in range(NUM_OCTAVES):
+    C_MAJOR_KEY += [MIN_CLASS + i for i in [0, 2, 4, 5, 7, 9, 11]]
+
+C_MAJOR_TONIC = MIN_CLASS + 48
+A_MINOR_TONIC = MIN_CLASS + 57
 
 # The number of half-steps in musical intervals, in order of dissonance
 OCTAVE = 12
@@ -50,6 +54,7 @@ DESCENDING = -1
 # Indicate whether a melodic leap has been resolved or if another leap was made
 LEAP_RESOLVED = 1
 LEAP_DOUBLED = -1
+
 
 def one_hot(i, nb_classes):
     arr = np.zeros((nb_classes,), dtype=int)

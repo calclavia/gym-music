@@ -8,11 +8,11 @@ NOTE_OFF = 0
 NO_EVENT = 1
 
 # Number of octaves supported
-NUM_OCTAVES = 4
+NUM_OCTAVES = 3
 NOTES_PER_OCTAVE = 12
 
 # Min note in MIDI supported
-MIN_NOTE = 24
+MIN_NOTE = 36
 MAX_NOTE = MIN_NOTE + (NUM_OCTAVES + 1) * NOTES_PER_OCTAVE
 
 # Number of output note classes.

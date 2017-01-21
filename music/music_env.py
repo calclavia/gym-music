@@ -10,10 +10,10 @@ class MusicEnv(Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self):
-        self.observation_space = spaces.Tuple(
+        self.observation_space = spaces.Tuple((
             spaces.Discrete(NUM_CLASSES),
             spaces.Discrete(NOTES_PER_BAR)
-        )
+        ))
         self.action_space = spaces.Tuple(
             tuple(spaces.Discrete(2) for _ in range(NUM_CLASSES))
         )
@@ -33,12 +33,11 @@ class MusicEnv(Env):
 
     def _reset(self):
         # Start with a random note (except end composition).
-        #state = one_hot(random.choice(self.key), len(self.action_space.spaces))
         state = random.choice(self.key)
         # Composition is a list of notes composed
         self.composition = [state]
         self.beat = 0
-        return state
+        return (state, self.beat % NOTES_PER_BAR)
 
     def _render(self, mode='human', close=False):
         pass

@@ -6,18 +6,19 @@ label_compositions = []
 
 class MusicCloneEnv(MusicEnv):
     """
-    Music environment that attempts to clone an existing composition
+    Music environment that attempts to clone an existing melody.
     """
     def _step(self, action):
-        action = np.array(action)
-        action, reward, done, info = super()._step(action)
+        state, reward, done, info = super()._step(action)
 
         # Award for action matching example composition
-        diff = np.abs(self.label_composition[self.beat - 1] - action)
-        diff_ratio = np.sum(diff) / len(diff)
-        reward += self.reward_amount * (1 - diff_ratio)
+        if action == self.label_composition[self.beat - 1]:
+            reward += self.reward_amount
 
-        return action, reward, done, info
+        if self.beat == len(self.label_composition):
+            done = True
+
+        return state, reward, done, info
 
     def _reset(self):
         # TODO: Avoid globals
@@ -26,4 +27,7 @@ class MusicCloneEnv(MusicEnv):
         self.label_composition = random.choice(label_compositions)
         self.num_notes = len(self.label_composition)
         self.reward_amount = 1. / self.num_notes
-        return super()._reset()
+
+        self.composition = [self.label_composition[0]]
+        self.beat = 0
+        return self._current_state()

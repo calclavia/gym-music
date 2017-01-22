@@ -29,15 +29,16 @@ class MusicEnv(Env):
         """
         self.composition.append(action)
         self.beat += 1
-        return (action, self.beat % NOTES_PER_BAR), 0, self.beat == self.num_notes, {}
+        return self._current_state(), 0, self.beat == self.num_notes, {}
 
     def _reset(self):
-        # Start with a random note (except end composition).
-        state = random.choice(self.key)
         # Composition is a list of notes composed
-        self.composition = [state]
+        self.composition = [random.choice(self.key)]
         self.beat = 0
-        return (state, self.beat % NOTES_PER_BAR)
+        return self._current_state()
+
+    def _current_state(self):
+        return (self.composition[-1], self.beat % NOTES_PER_BAR)
 
     def _render(self, mode='human', close=False):
         pass

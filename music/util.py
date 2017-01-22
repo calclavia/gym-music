@@ -30,7 +30,8 @@ NUM_CLASSES = MIN_CLASS + (MAX_NOTE - MIN_NOTE)
 
 # Number of beats in a bar
 BEATS_PER_BAR = 4
-NOTES_PER_BEAT = 2
+# Notes per quarter note
+NOTES_PER_BEAT = 4
 # The quickest note is a half-note
 NOTES_PER_BAR = NOTES_PER_BEAT * BEATS_PER_BAR
 
